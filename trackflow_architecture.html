@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackFlow Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Light Mode */
+    --bg-color: #f8f9fa;
+    --text-main: #1f2937;
+    --text-muted: #4b5563;
+    --panel-bg: #ffffff;
+    --panel-border: #e5e7eb;
+    --line-color: #9ca3af;
+    --divider-color: #d1d5db;
+    --lane-text: #6b7280;
+    --purple-fill: #EEEDFE;
+    --purple-stroke: #534AB7;
+    --purple-text: #1f2937;
+    --teal-fill: #E1F5EE;
+    --teal-stroke: #0F6E56;
+    --teal-text: #1f2937;
+    --coral-fill: #FAECE7;
+    --coral-stroke: #993C1D;
+    --coral-text: #1f2937;
+    --gray-fill: #F1EFE8;
+    --gray-stroke: #5F5E5A;
+    --gray-text: #1f2937;
+    --node-shadow-color: rgba(0,0,0,0.1);
+  }
+  
+  [data-theme='dark'] {
+    /* Dark Mode */
+    --bg-color: #111827;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --panel-bg: #1f2937;
+    --panel-border: #374151;
+    --line-color: #6b7280;
+    --divider-color: #4b5563;
+    --lane-text: #9ca3af;
+    --purple-fill: #3C3489;
+    --purple-stroke: #534AB7;
+    --purple-text: #f9fafb;
+    --teal-fill: #085041;
+    --teal-stroke: #0F6E56;
+    --teal-text: #f9fafb;
+    --coral-fill: #712B13;
+    --coral-stroke: #993C1D;
+    --coral-text: #f9fafb;
+    --gray-fill: #444441;
+    --gray-stroke: #5F5E5A;
+    --gray-text: #f9fafb;
+    --node-shadow-color: rgba(0,0,0,0.5);
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  header {
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .theme-btn {
+    padding: 8px 16px;
+    background: var(--purple-stroke);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+  .theme-btn:hover { opacity: 0.9; }
+
+  main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .svg-container {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    overflow: auto;
+  }
+
+  svg {
+    max-width: 100%;
+    max-height: 100%;
+    width: 680px;
+    height: 620px;
+    user-select: none;
+  }
+
+  /* Node Styling */
+  .node { cursor: pointer; }
+  .node rect {
+    stroke-width: 0.5;
+    transition: filter 0.2s, stroke-width 0.2s;
+  }
+  .node text { pointer-events: none; }
+  .node-title { font-size: 14px; font-weight: 500; }
+  .node-sub { font-size: 12px; letter-spacing: -0.2px; }
+
+  .node.purple rect { fill: var(--purple-fill); stroke: var(--purple-stroke); }
+  .node.purple text { fill: var(--purple-text); }
+  .node.teal rect { fill: var(--teal-fill); stroke: var(--teal-stroke); }
+  .node.teal text { fill: var(--teal-text); }
+  .node.coral rect { fill: var(--coral-fill); stroke: var(--coral-stroke); }
+  .node.coral text { fill: var(--coral-text); }
+  .node.gray rect { fill: var(--gray-fill); stroke: var(--gray-stroke); }
+  .node.gray text { fill: var(--gray-text); }
+
+  .node:hover rect { filter: brightness(0.95); }
+  [data-theme='dark'] .node:hover rect { filter: brightness(1.15); }
+
+  .node.selected rect {
+    stroke-width: 2.5;
+    stroke: var(--text-main) !important;
+    filter: drop-shadow(0 4px 6px var(--node-shadow-color));
+  }
+
+  /* Connector & Lane Styling */
+  .connector {
+    stroke: var(--line-color);
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .divider {
+    stroke: var(--divider-color);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 6;
+  }
+  .lane-label {
+    fill: var(--lane-text);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #arrowhead-path { stroke: var(--line-color); }
+
+  /* Side Panel */
+  .side-panel {
+    width: 320px;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--panel-border);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+    transition: background 0.3s;
+  }
+  .side-panel.hidden { display: none; }
+  .empty-panel {
+    width: 320px;
+    background: var(--bg-color);
+    border-left: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-panel.hidden { display: none; }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-header h2 { margin: 0; font-size: 18px; color: var(--text-main); }
+  .panel-header button {
+    background: none; border: none; font-size: 24px;
+    color: var(--text-muted); cursor: pointer; padding: 0;
+  }
+  .panel-header button:hover { color: var(--text-main); }
+
+  .panel-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .panel-section p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-main);
+  }
+
+  /* Legend */
+  .legend {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 6px var(--node-shadow-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 16px;
+  }
+  .legend-header button {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; padding: 0; font-size: 12px; font-weight: 600;
+  }
+  .legend-content {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .color-box {
+    width: 12px; height: 12px; border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .color-box.client { background: var(--purple-fill); border-color: var(--purple-stroke); }
+  .color-box.gateway { background: var(--teal-fill); border-color: var(--teal-stroke); }
+  .color-box.services { background: var(--coral-fill); border-color: var(--coral-stroke); }
+  .color-box.data { background: var(--gray-fill); border-color: var(--gray-stroke); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TrackFlow Architecture</h1>
+  <button class="theme-btn" id="theme-toggle">Toggle Theme</button>
+</header>
+
+<main>
+  <div class="svg-container">
+    <svg viewBox="0 0 680 620" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path id="arrowhead-path" d="M 0 0 L 8 5 L 0 10" fill="none" stroke-width="1.5"/>
+        </marker>
+      </defs>
+
+      <!-- Lane Dividers -->
+      <line class="divider" x1="40" y1="131" x2="640" y2="131" />
+      <line class="divider" x1="40" y1="253" x2="640" y2="253" />
+      <line class="divider" x1="40" y1="420" x2="640" y2="420" />
+
+      <!-- Lane Labels -->
+      <text class="lane-label" x="25" y="79" transform="rotate(-90 25 79)" text-anchor="middle">CLIENT</text>
+      <text class="lane-label" x="25" y="178" transform="rotate(-90 25 178)" text-anchor="middle">GATEWAY</text>
+      <text class="lane-label" x="25" y="333" transform="rotate(-90 25 333)" text-anchor="middle">SERVICES</text>
+      <text class="lane-label" x="25" y="507" transform="rotate(-90 25 507)" text-anchor="middle">DATA</text>
+
+      <!-- Arrows -->
+      <path class="connector" d="M 160 114 C 160 131, 150 131, 150 144" marker-end="url(#arrowhead)"/>
+      <line class="connector" x1="240" y1="178" x2="262" y2="178" marker-end="url(#arrowhead)"/>
+      <path class="connector" d="M 346 208 C 346 253, 425 253, 425 294" marker-end="url(#arrowhead)"/>
+      
+      <!-- Services to Data Arrows -->
+      <path class="connector" d="M 125 368 C 125 420, 125 420, 125 468" marker-end="url(#arrowhead)"/>
+      <path class="connector" d="M 275 368 C 275 420, 220 420, 220 468" marker-end="url(#arrowhead)"/>
+      <path class="connector" d="M 425 368 C 425 420, 380 420, 380 468" marker-end="url(#arrowhead)"/>
+      <path class="connector" d="M 574 368 C 574 420, 568 420, 568 468" marker-end="url(#arrowhead)"/>
+
+      <!-- CLIENT Nodes (y=44, h=70) Center=79 -->
+      <g class="node purple" data-id="react-frontend">
+        <rect x="60" y="44" width="200" height="70" rx="8" />
+        <text x="160" y="74" class="node-title" text-anchor="middle">React.js Frontend</text>
+        <text x="160" y="94" class="node-sub" text-anchor="middle">Context API · React Router · Axios</text>
+      </g>
+      <g class="node purple" data-id="views">
+        <rect x="290" y="44" width="180" height="70" rx="8" />
+        <text x="380" y="74" class="node-title" text-anchor="middle">Views</text>
+        <text x="380" y="94" class="node-sub" text-anchor="middle">Dashboard · Board · Issues</text>
+      </g>
+      <g class="node purple" data-id="rbac-ui-guard">
+        <rect x="498" y="44" width="140" height="70" rx="8" />
+        <text x="568" y="74" class="node-title" text-anchor="middle">RBAC UI Guard</text>
+        <text x="568" y="94" class="node-sub" text-anchor="middle">Admin · Manager · Dev</text>
+      </g>
+
+      <!-- GATEWAY Nodes (y=148, h=60) Center=178 -->
+      <g class="node teal" data-id="auth-middleware">
+        <rect x="60" y="148" width="180" height="60" rx="8" />
+        <text x="150" y="174" class="node-title" text-anchor="middle">Auth Middleware</text>
+        <text x="150" y="194" class="node-sub" text-anchor="middle">JWT · bcrypt · Role check</text>
+      </g>
+      <g class="node teal" data-id="express-router">
+        <rect x="266" y="148" width="160" height="60" rx="8" />
+        <text x="346" y="174" class="node-title" text-anchor="middle">Express Router</text>
+        <text x="346" y="194" class="node-sub" text-anchor="middle">/api/v1 routes</text>
+      </g>
+      <g class="node teal" data-id="validation-errors">
+        <rect x="452" y="148" width="180" height="60" rx="8" />
+        <text x="542" y="174" class="node-title" text-anchor="middle">Validation &amp; Errors</text>
+        <text x="542" y="194" class="node-sub" text-anchor="middle">Joi · Global error handler</text>
+      </g>
+
+      <!-- SERVICES Nodes (y=298, h=70) Center=333 -->
+      <g class="node coral" data-id="auth-service">
+        <rect x="60" y="298" width="130" height="70" rx="8" />
+        <text x="125" y="328" class="node-title" text-anchor="middle">Auth Service</text>
+        <text x="125" y="348" class="node-sub" text-anchor="middle">Login · Register · JWT</text>
+      </g>
+      <g class="node coral" data-id="project-service">
+        <rect x="210" y="298" width="130" height="70" rx="8" />
+        <text x="275" y="328" class="node-title" text-anchor="middle">Project Service</text>
+        <text x="275" y="348" class="node-sub" text-anchor="middle">CRUD · Members · Roles</text>
+      </g>
+      <g class="node coral" data-id="issue-service">
+        <rect x="360" y="298" width="130" height="70" rx="8" />
+        <text x="425" y="328" class="node-title" text-anchor="middle">Issue Service</text>
+        <text x="425" y="348" class="node-sub" text-anchor="middle">Lifecycle · Priority · Status</text>
+      </g>
+      <g class="node coral" data-id="notify-service">
+        <rect x="510" y="298" width="128" height="70" rx="8" />
+        <text x="574" y="328" class="node-title" text-anchor="middle">Notify Service</text>
+        <text x="574" y="348" class="node-sub" text-anchor="middle">Assign · Status alerts</text>
+      </g>
+
+      <!-- DATA Nodes (y=472, h=70) Center=507 -->
+      <g class="node gray" data-id="mongodb">
+        <rect x="60" y="472" width="200" height="70" rx="8" />
+        <text x="160" y="502" class="node-title" text-anchor="middle">MongoDB (Mongoose)</text>
+        <text x="160" y="522" class="node-sub" text-anchor="middle">Users · Projects · Issues</text>
+      </g>
+      <g class="node gray" data-id="activity-logs">
+        <rect x="290" y="472" width="180" height="70" rx="8" />
+        <text x="380" y="502" class="node-title" text-anchor="middle">Activity Logs</text>
+        <text x="380" y="522" class="node-sub" text-anchor="middle">Audit trail · Change history</text>
+      </g>
+      <g class="node gray" data-id="config-enums">
+        <rect x="498" y="472" width="140" height="70" rx="8" />
+        <text x="568" y="502" class="node-title" text-anchor="middle">Config / Enums</text>
+        <text x="568" y="522" class="node-sub" text-anchor="middle">Statuses · Priorities</text>
+      </g>
+    </svg>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-header">
+        <span>Legend</span>
+        <button id="toggle-legend">COLLAPSE</button>
+      </div>
+      <div class="legend-content" id="legend-content">
+        <div class="legend-item"><div class="color-box client"></div> Client</div>
+        <div class="legend-item"><div class="color-box gateway"></div> Gateway</div>
+        <div class="legend-item"><div class="color-box services"></div> Services</div>
+        <div class="legend-item"><div class="color-box data"></div> Data</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side-panel hidden" id="side-panel">
+    <div class="panel-header">
+      <h2 id="panel-title">Node</h2>
+      <button id="close-panel" aria-label="Close panel">&times;</button>
+    </div>
+    <div class="panel-section">
+      <h3>Role</h3>
+      <p id="panel-desc"></p>
+    </div>
+    <div class="panel-section">
+      <h3>Technologies</h3>
+      <p id="panel-tech"></p>
+    </div>
+  </aside>
+
+  <aside class="empty-panel" id="empty-panel">
+    Select a node in the diagram to view its details.
+  </aside>
+</main>
+
+<script>
+  const nodeData = {
+    "react-frontend": {
+      name: "React.js Frontend",
+      desc: "The single-page application layer. Handles all UI rendering, routing, and user interactions. Communicates with the backend exclusively via Axios calls to /api/v1.",
+      tech: "React.js, React Router v6, Context API, Axios"
+    },
+    "views": {
+      name: "Views",
+      desc: "Route-level page components: Dashboard (personal issue feed), Board (Kanban view grouped by status), Issue Detail (full thread + activity log), Login/Register.",
+      tech: "JSX, CSS Modules"
+    },
+    "rbac-ui-guard": {
+      name: "RBAC UI Guard",
+      desc: "ProtectedRoute component that reads the current user's role from AuthContext and conditionally renders admin/manager controls. Server enforces; client reflects.",
+      tech: "React Context, role.middleware.js"
+    },
+    "auth-middleware": {
+      name: "Auth Middleware",
+      desc: "Runs on every protected route. Verifies the JWT from the Authorization header, decodes the payload, and attaches the user object to req.user.",
+      tech: "jsonwebtoken, bcrypt"
+    },
+    "express-router": {
+      name: "Express Router",
+      desc: "Central /api/v1 router that mounts sub-routers for auth, projects, issues, and users. Applies auth and role middleware per route group.",
+      tech: "Express.js Router"
+    },
+    "validation-errors": {
+      name: "Validation & Errors",
+      desc: "Joi schemas validate all incoming request bodies before they reach controllers. A global error handler formats and returns consistent JSON error responses.",
+      tech: "Joi, Express error middleware"
+    },
+    "auth-service": {
+      name: "Auth Service",
+      desc: "Handles user registration (hashes password), login (compares hash, issues JWT), and /me (returns user from token). No business logic in the controller.",
+      tech: "bcrypt, JWT, Mongoose User model"
+    },
+    "project-service": {
+      name: "Project Service",
+      desc: "Full CRUD for projects, member invite/remove, role assignment. Validates that the requesting user is a member before any project operation.",
+      tech: "Mongoose Project model, role checks"
+    },
+    "issue-service": {
+      name: "Issue Service",
+      desc: "Creates, updates, and deletes issues. Enforces status transition rules. Calls activityLogger after every state change. Supports filtering and pagination.",
+      tech: "Mongoose Issue model, activityLogger utility"
+    },
+    "notify-service": {
+      name: "Notify Service",
+      desc: "Writes a notification flag on the assignee/reporter document when an issue is assigned or status changes. In-app only — no email in v1.",
+      tech: "Mongoose User model update"
+    },
+    "mongodb": {
+      name: "MongoDB (Mongoose)",
+      desc: "Four main collections: users, projects, issues, activity_logs. Issues embed comments (always fetched together). Members are stored as [{user, role}] on the Project document.",
+      tech: "MongoDB Atlas, Mongoose ODM"
+    },
+    "activity-logs": {
+      name: "Activity Logs",
+      desc: "Separate collection — not embedded in Issues — to keep Issue documents lean. Each document records: actor, action, from-value, to-value, timestamp.",
+      tech: "Mongoose ActivityLog model"
+    },
+    "config-enums": {
+      name: "Config / Enums",
+      desc: "Shared constants: status values (backlog, todo, in_progress, in_review, done), priority levels (low, medium, high, critical), issue types (bug, feature, task, improvement).",
+      tech: "JS enums / constants file"
+    }
+  };
+
+  const STORAGE_NODE = 'trackflow_last_node';
+  const STORAGE_THEME = 'trackflow_theme';
+  const STORAGE_LEGEND = 'trackflow_legend_collapsed';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(STORAGE_THEME, theme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  function selectNode(id) {
+    if (!id || !nodeData[id]) return closePanel();
+    
+    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+    const n = document.querySelector('.node[data-id="' + id + '"]');
+    if (n) n.classList.add('selected');
+
+    document.getElementById('panel-title').textContent = nodeData[id].name;
+    document.getElementById('panel-desc').textContent = nodeData[id].desc;
+    document.getElementById('panel-tech').textContent = nodeData[id].tech;
+
+    document.getElementById('side-panel').classList.remove('hidden');
+    document.getElementById('empty-panel').classList.add('hidden');
+    
+    localStorage.setItem(STORAGE_NODE, id);
+  }
+
+  function closePanel() {
+    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+    document.getElementById('side-panel').classList.add('hidden');
+    document.getElementById('empty-panel').classList.remove('hidden');
+    localStorage.removeItem(STORAGE_NODE);
+  }
+
+  function toggleLegend() {
+    const content = document.getElementById('legend-content');
+    const btn = document.getElementById('toggle-legend');
+    
+    if (content.style.display === 'none') {
+      content.style.display = 'flex';
+      btn.textContent = 'COLLAPSE';
+      localStorage.setItem(STORAGE_LEGEND, 'false');
+    } else {
+      content.style.display = 'none';
+      btn.textContent = 'EXPAND';
+      localStorage.setItem(STORAGE_LEGEND, 'true');
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Restore Theme
+    applyTheme(localStorage.getItem(STORAGE_THEME) || 'light');
+
+    // Restore Legend
+    if (localStorage.getItem(STORAGE_LEGEND) === 'true') {
+      document.getElementById('legend-content').style.display = 'none';
+      document.getElementById('toggle-legend').textContent = 'EXPAND';
+    }
+
+    // Restore Node
+    const lastNode = localStorage.getItem(STORAGE_NODE);
+    if (lastNode) selectNode(lastNode);
+
+    // Binds
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    document.getElementById('close-panel').addEventListener('click', closePanel);
+    document.getElementById('toggle-legend').addEventListener('click', toggleLegend);
+
+    document.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('click', (e) => {
+        selectNode(e.currentTarget.getAttribute('data-id'));
+      });
+    });
+  });
+</script>
+</body>
+</html>

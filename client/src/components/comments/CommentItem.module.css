@@ -1,0 +1,187 @@
+.comment {
+  padding: 14px 16px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), opacity var(--transition);
+}
+
+.comment:hover { border-color: rgba(108,99,255,0.3); }
+
+.optimistic { opacity: 0.6; pointer-events: none; }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.authorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.time {
+  font-size: 11px;
+  color: var(--color-text-faint);
+  cursor: default;
+}
+
+.editedBadge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.sendingBadge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-warning);
+  background: rgba(224,169,82,0.1);
+  border: 1px solid rgba(224,169,82,0.3);
+  padding: 2px 7px;
+  border-radius: 20px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.comment:hover .actions { opacity: 1; }
+
+.actionBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.actionBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.dangerBtn:hover {
+  border-color: var(--color-danger) !important;
+  color: var(--color-danger) !important;
+}
+
+.body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editInput {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.editFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.editHint {
+  font-size: 11px;
+  color: var(--color-text-faint);
+}
+
+.editActions { display: flex; gap: 8px; }
+
+.cancelEditBtn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  transition: all var(--transition);
+}
+
+.cancelEditBtn:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+.saveBtn {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background var(--transition);
+}
+
+.saveBtn:hover:not(:disabled) { background: var(--color-primary-hover); }
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }

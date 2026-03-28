@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#f5f7fb] text-[#1a202c] antialiased min-h-screen font-sans;
+    font-size: 15px;
+  }
+
+  input, textarea, select {
+    @apply bg-[#edf2f7] border-[#e2e8f0] rounded-sm py-2.5 px-3.5 w-full transition-colors focus:border-primary focus:outline-none;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white py-2.5 px-5 rounded-sm font-medium transition-colors hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-[#e2e8f0] text-[#4a5568] py-2.5 px-5 rounded-sm font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-60;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-white py-2.5 px-5 rounded-sm font-medium transition-colors hover:bg-red-600;
+  }
+
+  .glass-card {
+    @apply bg-white border border-[#e2e8f0] rounded-lg shadow-premium;
+  }
+}

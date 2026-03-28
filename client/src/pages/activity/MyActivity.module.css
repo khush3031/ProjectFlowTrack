@@ -1,0 +1,28 @@
+.page { max-width: 760px; }
+
+.back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  padding: 0;
+  margin-bottom: 24px;
+  display: inline-block;
+  transition: color var(--transition);
+}
+
+.back:hover { color: var(--color-text); }
+
+.header { margin-bottom: 32px; }
+
+.heading { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+
+.sub { font-size: 14px; color: var(--color-text-muted); }
+
+.feedWrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
