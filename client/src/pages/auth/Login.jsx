@@ -80,13 +80,20 @@ export default function Login() {
             {...getFieldProps('email')}
           />
 
-          <FormField
-            label="Password"
-            type="password"
-            placeholder="Enter your password"
-            required
-            {...getFieldProps('password')}
-          />
+          <div className="flex flex-col gap-1">
+            <FormField
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              required
+              {...getFieldProps('password')}
+            />
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-[12.5px] text-primary hover:underline font-medium">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
           <LoadingButton
             type="submit"

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { PRIORITY_LABELS } from '../../utils/issueHelpers'
+import { PRIORITY_LABELS, formatDueDate } from '../../utils/issueHelpers'
 
 export default function IssueCard({ issue, projectId, isPending, onStatusChange }) {
   const navigate = useNavigate()
@@ -10,16 +10,21 @@ export default function IssueCard({ issue, projectId, isPending, onStatusChange 
   }
 
   const priorityColors = {
-    low: 'bg-gray-100 text-gray-600',
+    low:    'bg-gray-100 text-gray-600',
     medium: 'bg-blue-50 text-blue-600',
-    high: 'bg-red-50 text-red-600',
+    high:   'bg-red-50 text-red-600',
   }
+
+  const due      = formatDueDate(issue.dueDate)
+  const isOverdue = due?.urgency === 'overdue'
+  const isSoon    = due?.urgency === 'soon'
 
   return (
     <div
       className={`
-        bg-white border border-[#e2e8f0] rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer relative group
+        bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer relative group
         ${isPending ? 'opacity-70 grayscale' : ''}
+        ${isOverdue ? 'border-red-200 hover:border-red-400' : 'border-[#e2e8f0] hover:border-primary/40'}
       `}
       onClick={() => navigate(`/projects/${projectId}/issues/${issue._id}`)}
     >
@@ -29,10 +34,15 @@ export default function IssueCard({ issue, projectId, isPending, onStatusChange 
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${priorityColors[issue.priority] || priorityColors.medium}`}>
           {PRIORITY_LABELS[issue.priority]}
         </span>
+        {isOverdue && (
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-50 text-red-600">
+            Overdue
+          </span>
+        )}
       </div>
 
       <h3 className="text-[14px] font-semibold text-[#1a202c] mb-4 line-clamp-2 leading-snug">
@@ -40,11 +50,22 @@ export default function IssueCard({ issue, projectId, isPending, onStatusChange 
       </h3>
 
       <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
-        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">
-          {issue.assignee ? issue.assignee.name.charAt(0) : '?'}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">
+            {issue.assignee ? issue.assignee.name.charAt(0) : '?'}
+          </div>
+          {due && (
+            <span className={`text-[11px] font-medium truncate ${
+              isOverdue ? 'text-red-500' : isSoon ? 'text-amber-500' : 'text-[#a0aec0]'
+            }`}>
+              {isOverdue
+                ? `${Math.abs(due.days)}d overdue`
+                : `Due ${due.formatted}`}
+            </span>
+          )}
         </div>
-        
-        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+
+        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           {issue.status !== 'todo' && (
             <button
               className="text-[10px] font-medium text-[#4a5568] hover:text-primary"

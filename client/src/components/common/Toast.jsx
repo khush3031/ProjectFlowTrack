@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import styles from './Toast.module.css'
 
 let _addToast = null
 
@@ -48,6 +47,13 @@ const ICONS = {
   ),
 }
 
+const TYPE_CLASSES = {
+  success: 'bg-emerald-500 shadow-[0_8px_20px_rgba(16,185,129,0.25)]',
+  error:   'bg-red-500 shadow-[0_8px_20px_rgba(239,68,68,0.25)]',
+  info:    'bg-blue-500 shadow-[0_8px_20px_rgba(59,130,246,0.25)]',
+  warning: 'bg-amber-500 shadow-[0_8px_20px_rgba(245,158,11,0.25)]',
+}
+
 const DURATION = 4000
 
 function ToastItem({ item, onRemove }) {
@@ -65,25 +71,38 @@ function ToastItem({ item, onRemove }) {
 
   return (
     <div
-      className={`${styles.toast} ${styles[item.type]} ${
-        exiting ? styles.exit : styles.enter
-      }`}
+      className={[
+        'flex items-center gap-3 p-4 rounded-md',
+        'border border-white/10 pointer-events-auto',
+        'relative overflow-hidden backdrop-blur-sm text-white',
+        'shadow-[0_10px_30px_rgba(0,0,0,0.12)]',
+        TYPE_CLASSES[item.type],
+        exiting ? 'animate-toast-out' : 'animate-toast-in',
+      ].join(' ')}
       role="alert"
       aria-live="polite"
     >
-      <div className={styles.iconCircle} aria-hidden>
+      <div
+        className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20 text-white"
+        aria-hidden
+      >
         {ICONS[item.type]}
       </div>
-      <p className={styles.msg}>{item.msg}</p>
+
+      <p className="flex-1 text-sm font-medium leading-snug text-white">
+        {item.msg}
+      </p>
+
       <button
-        className={styles.close}
+        className="bg-transparent border-0 text-white/60 text-sm cursor-pointer p-1 rounded-sm flex-shrink-0 leading-none transition-all duration-150 hover:bg-white/10 hover:text-white"
         onClick={dismiss}
         aria-label="Dismiss notification"
       >
         ✕
       </button>
+
       <div
-        className={styles.progress}
+        className="absolute bottom-0 left-0 h-0.5 w-full origin-left bg-white/40 animate-progress-shrink"
         style={{ animationDuration: `${DURATION}ms` }}
       />
     </div>
@@ -107,7 +126,10 @@ export default function Toast() {
   }, [addToast])
 
   return (
-    <div className={styles.container} aria-label="Notifications">
+    <div
+      className="fixed top-6 right-6 flex flex-col gap-3 z-[9999] pointer-events-none max-w-[380px] w-[calc(100vw-48px)]"
+      aria-label="Notifications"
+    >
       {toasts.map(t => (
         <ToastItem key={t.id} item={t} onRemove={removeToast} />
       ))}

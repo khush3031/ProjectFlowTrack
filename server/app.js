@@ -12,6 +12,8 @@ import userRoutes from './routes/user.routes.js';
 import orgRoutes from './routes/org.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import activityRoutes from './routes/activityLog.routes.js';
+import { setupRequestTracker } from "request-tracker-pro"
+
 
 import {
   globalErrorHandler,
@@ -31,6 +33,12 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+setupRequestTracker(app, { storage: { adapters: [
+      { type: 'logging-only', format: 'text' },
+      { type: 'mongodb', uri: 'mongodb://localhost:27017/trackflow', collection: 'requests', ttlDays: 30 },
+
+    ] } });
 
 // Routes
 app.use('/api/v1/auth', authRoutes);

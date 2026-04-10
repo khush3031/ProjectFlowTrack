@@ -38,6 +38,8 @@ export const Errors = {
   // Validation
   validation: (msg) =>
     new AppError(msg, 400, 'VALIDATION_ERROR'),
+  badRequest: (msg = 'Bad request') =>
+    new AppError(msg, 400, 'BAD_REQUEST'),
   invalidId: (field = 'ID') =>
     new AppError(`Invalid ${field} format`, 400, 'INVALID_ID'),
 

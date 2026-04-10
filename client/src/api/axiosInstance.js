@@ -36,9 +36,10 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    const isAuthRoute = 
-      originalRequest.url?.endsWith('/auth/login') || 
-      originalRequest.url?.endsWith('/auth/register');
+    const isAuthRoute =
+      originalRequest.url?.endsWith('/auth/login') ||
+      originalRequest.url?.endsWith('/auth/register') ||
+      originalRequest.url?.endsWith('/auth/refresh');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {

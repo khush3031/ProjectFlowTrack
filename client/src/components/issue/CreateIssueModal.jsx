@@ -13,6 +13,7 @@ export default function CreateIssueModal({ projectId, projectMembers = [], onClo
     schema: createIssueSchema,
     onSubmit: async (values, { setApiError, setFieldErrors }) => {
       try {
+        console.log('Submitting issue with values:', values)
         await createIssueApi(projectId, {
           ...values,
           assignee: values.assignee || null,
@@ -55,6 +56,12 @@ export default function CreateIssueModal({ projectId, projectMembers = [], onClo
             maxLength={2000}
             rows={4}
             {...getFieldProps('description')}
+          />
+
+          <FormField
+            lable="Tag"
+            placeholder="Enter Tag"
+            {...getFieldProps('tags')}
           />
 
           <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">

@@ -21,6 +21,9 @@ const issueSchema = new Schema(
       enum: ['todo', 'in_progress', 'done'],
       default: 'todo',
     },
+    tags: {
+      type: String,
+    },
     priority: {
       type: String,
       enum: ['low', 'medium', 'high'],

@@ -7,8 +7,9 @@ export default function Sidebar({ isOpen, onClose }) {
   const { isAdmin } = useAuth()
 
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { to: '/projects', label: 'Projects', icon: '📁' },
+    { to: '/dashboard',  label: 'Dashboard',    icon: '📊' },
+    { to: '/my-issues',  label: 'My Issues',     icon: '✅' },
+    { to: '/projects',   label: 'Projects',      icon: '📁' },
     { to: '/org/settings', label: 'Organization', icon: '🏢' },
   ]
 
@@ -38,8 +39,8 @@ export default function Sidebar({ isOpen, onClose }) {
             onClick={onClose}
             className={({ isActive }) => `
               flex items-center px-3.5 py-2.5 rounded-sm text-[14px] transition-colors
-              ${isActive 
-                ? 'bg-[#edf2f7] text-[#1a202c] font-medium' 
+              ${isActive
+                ? 'bg-[#edf2f7] text-[#1a202c] font-medium'
                 : 'text-[#4a5568] hover:bg-[#f8fafc] hover:text-[#1a202c]'}
             `}
           >

@@ -13,6 +13,7 @@ export const createIssueSchema = Joi.object({
   priority: Joi.string()
     .valid('low', 'medium', 'high')
     .default('medium'),
+  tags: Joi.string().max(50).allow(null, '').optional(),
   assignee: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .allow(null, '')
@@ -25,7 +26,7 @@ export const createIssueSchema = Joi.object({
 
 export const updateIssueSchema = createIssueSchema.fork(
   ['title', 'description', 'status', 'priority',
-   'assignee', 'dueDate'],
+   'assignee', 'dueDate', 'tags'],
   (f) => f.optional()
 )
 

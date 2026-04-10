@@ -30,6 +30,10 @@ export default function ProjectCard({ project, onDeleted }) {
     month: 'short', day: 'numeric', year: 'numeric'
   })
 
+  const stats   = project.stats || { todo: 0, in_progress: 0, done: 0, total: 0 }
+  const pct     = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+  const hasIssues = stats.total > 0
+
   return (
     <>
       <div
@@ -70,7 +74,33 @@ export default function ProjectCard({ project, onDeleted }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-50 text-[12px]">
+        {/* Progress bar */}
+        <div className="mt-4 mb-1">
+          {hasIssues ? (
+            <>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] text-[#718096]">Progress</span>
+                <span className="text-[11px] font-semibold text-[#4a5568]">{pct}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-[#edf2f7] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="flex items-center gap-3 mt-1.5">
+                <span className="text-[10px] text-[#a0aec0]">{stats.done}/{stats.total} done</span>
+                {stats.in_progress > 0 && (
+                  <span className="text-[10px] text-[#a0aec0]">{stats.in_progress} in progress</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-[11px] text-[#a0aec0]">No issues yet</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50 text-[12px]">
           <span className="font-semibold text-primary">{project.createdBy?.name || 'Unknown'}</span>
           <span className="text-[#a0aec0]">{createdAt}</span>
         </div>

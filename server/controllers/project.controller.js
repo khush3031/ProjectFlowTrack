@@ -1,5 +1,6 @@
 import Project from '../models/Project.model.js';
 import User from '../models/User.model.js';
+import Issue from '../models/Issue.model.js';
 import { scopeToOrg } from '../middleware/org.middleware.js';
 
 export const createProject = async (req, res, next) => {
@@ -41,7 +42,26 @@ export const getAllProjects = async (req, res, next) => {
       .populate({ path: 'members', select: 'name email role', populate: { path: 'role', select: 'name' } })
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({ projects });
+    const projectIds = projects.map(p => p._id);
+    const statsRaw = await Issue.aggregate([
+      { $match: { project: { $in: projectIds } } },
+      { $group: { _id: { project: '$project', status: '$status' }, count: { $sum: 1 } } },
+    ]);
+
+    const statsMap = {};
+    for (const s of statsRaw) {
+      const pid = s._id.project.toString();
+      if (!statsMap[pid]) statsMap[pid] = { todo: 0, in_progress: 0, done: 0, total: 0 };
+      statsMap[pid][s._id.status] = s.count;
+      statsMap[pid].total += s.count;
+    }
+
+    const projectsWithStats = projects.map(p => ({
+      ...p.toObject(),
+      stats: statsMap[p._id.toString()] || { todo: 0, in_progress: 0, done: 0, total: 0 },
+    }));
+
+    return res.status(200).json({ projects: projectsWithStats });
   } catch (err) {
     next(err);
   }

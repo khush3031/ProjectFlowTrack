@@ -11,6 +11,8 @@ import Toast from './components/common/Toast';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Dashboard & Onboarding
 import CreateOrg from './pages/onboarding/CreateOrg';
@@ -26,10 +28,14 @@ import ProjectList from './pages/projects/ProjectList';
 // Issue Pages
 import IssueList from './pages/issues/IssueList';
 import IssueDetail from './pages/issues/IssueDetail';
+import MyIssues from './pages/issues/MyIssues';
 
 // Activity Pages
 import MyActivity from './pages/activity/MyActivity';
 import ProjectActivity from './pages/activity/ProjectActivity';
+
+// Profile
+import Profile from './pages/profile/Profile';
 
 import NotFound from './components/common/NotFound';
 
@@ -46,6 +52,8 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/invite/accept/:token" element={<AcceptInvite />} />
 
                 {/* App Routes */}
@@ -58,6 +66,8 @@ function App() {
                   <Route path="/projects/:projectId/issues/:issueId" element={<IssueDetail />} />
                   <Route path="/projects/:projectId/activity" element={<ProjectActivity />} />
                   <Route path="/activity" element={<MyActivity />} />
+                  <Route path="/my-issues" element={<MyIssues />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Route>
 

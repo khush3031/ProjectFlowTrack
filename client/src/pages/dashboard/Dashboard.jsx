@@ -1,14 +1,32 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth }     from '../../hooks/useAuth'
 import { useOrg }      from '../../hooks/useOrg'
 import { useProjects } from '../../hooks/useProjects'
 import { getMyActivityApi } from '../../api/activityApi'
+import { getMyIssuesApi } from '../../api/userApi'
 import ActivityFeed    from '../../components/activity/ActivityFeed'
 
 export default function Dashboard() {
   const { user, isAdmin } = useAuth()
   const { org, members }  = useOrg()
   const { projects }      = useProjects()
+
+  const [myIssues, setMyIssues]       = useState([])
+  const [issuesLoaded, setIssuesLoaded] = useState(false)
+
+  useEffect(() => {
+    getMyIssuesApi()
+      .then(({ data }) => setMyIssues(data.issues || []))
+      .catch(() => setMyIssues([]))
+      .finally(() => setIssuesLoaded(true))
+  }, [])
+
+  const openCount    = myIssues.filter(i => i.status !== 'done').length
+  const overdueCount = myIssues.filter(i => {
+    if (!i.dueDate || i.status === 'done') return false
+    return new Date(i.dueDate) < new Date()
+  }).length
 
   const activityFetchFn = (params) => getMyActivityApi(params)
 
@@ -23,24 +41,37 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 shadow-sm">
           <p className="text-[12px] font-bold uppercase tracking-wider text-[#a0aec0] mb-2">Projects</p>
           <p className="text-3xl font-bold text-[#1a202c] mb-1">{projects.length}</p>
           <p className="text-[12px] text-[#4a5568]">active projects</p>
         </div>
+
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 shadow-sm">
           <p className="text-[12px] font-bold uppercase tracking-wider text-[#a0aec0] mb-2">Team size</p>
           <p className="text-3xl font-bold text-[#1a202c] mb-1">{members.length}</p>
           <p className="text-[12px] text-[#4a5568]">members</p>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 shadow-sm">
-          <p className="text-[12px] font-bold uppercase tracking-wider text-[#a0aec0] mb-2">Your role</p>
-          <p className="text-[18px] font-bold text-primary mb-1 uppercase tracking-tight">
-            {user?.role}
+
+        <Link
+          to="/my-issues"
+          className="bg-white border border-[#e2e8f0] rounded-lg p-6 shadow-sm hover:border-primary/40 hover:shadow-md transition-all group"
+        >
+          <p className="text-[12px] font-bold uppercase tracking-wider text-[#a0aec0] mb-2">My Issues</p>
+          <p className="text-3xl font-bold text-[#1a202c] mb-1 group-hover:text-primary transition-colors">
+            {issuesLoaded ? openCount : '—'}
+          </p>
+          <p className="text-[12px] text-[#4a5568]">open issues</p>
+        </Link>
+
+        <div className={`bg-white border rounded-lg p-6 shadow-sm ${overdueCount > 0 ? 'border-red-200' : 'border-[#e2e8f0]'}`}>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-[#a0aec0] mb-2">Overdue</p>
+          <p className={`text-3xl font-bold mb-1 ${overdueCount > 0 ? 'text-red-500' : 'text-[#1a202c]'}`}>
+            {issuesLoaded ? overdueCount : '—'}
           </p>
           <p className="text-[12px] text-[#4a5568]">
-            {isAdmin ? 'Full administrative access' : 'Standard member access'}
+            {overdueCount > 0 ? 'need attention' : 'all on track'}
           </p>
         </div>
       </div>
@@ -66,21 +97,38 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-[#edf2f7]">
-              {projects.slice(0, 5).map(p => (
-                <Link
-                  key={p._id}
-                  to={`/projects/${p._id}/issues`}
-                  className="py-3.5 flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span className="text-[14px] font-semibold text-[#4a5568] group-hover:text-primary transition-colors">{p.name}</span>
-                  </div>
-                  <span className="text-[12px] text-[#a0aec0]">
-                    {p.members?.length ?? 0} members
-                  </span>
-                </Link>
-              ))}
+              {projects.slice(0, 5).map(p => {
+                const stats = p.stats || { done: 0, total: 0 }
+                const pct   = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+                return (
+                  <Link
+                    key={p._id}
+                    to={`/projects/${p._id}/issues`}
+                    className="py-3.5 flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                      <span className="text-[14px] font-semibold text-[#4a5568] group-hover:text-primary transition-colors truncate">{p.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                      {stats.total > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-16 h-1.5 bg-[#edf2f7] rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${pct === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] text-[#a0aec0]">{pct}%</span>
+                        </div>
+                      )}
+                      <span className="text-[12px] text-[#a0aec0]">
+                        {p.members?.length ?? 0} members
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
